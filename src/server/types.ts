@@ -17,6 +17,7 @@ export interface BlogPost {
   coverImageUrl?: string;
   audioUrl?: string;
   audioTitle?: string;
+  videoUrl?: string;
   youtubeUrl?: string;
   readingTimeMinutes: number;
   likesCount: number;

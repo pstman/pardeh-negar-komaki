@@ -45,6 +45,8 @@ import {
   getStoredTheme, 
   applyTheme 
 } from '../utils/themeSystem';
+import { AudioLinkPlayer } from './AudioLinkPlayer';
+import { MediaVideoPlayer } from './MediaVideoPlayer';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -247,7 +249,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setFormCoverImage(post.coverImageUrl || '');
     setFormAudioUrl(post.audioUrl || '');
     setFormAudioTitle(post.audioTitle || '');
-    setFormYoutubeUrl(post.youtubeUrl || '');
+    setFormYoutubeUrl(post.videoUrl || post.youtubeUrl || '');
     setFormTags(post.tags.join(', '));
     setFormReadTime(post.readingTimeMinutes);
   };
@@ -294,6 +296,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       coverImageUrl: formCoverImage.trim() || undefined,
       audioUrl: formAudioUrl.trim() || undefined,
       audioTitle: formAudioTitle.trim() || undefined,
+      videoUrl: formYoutubeUrl.trim() || undefined,
       youtubeUrl: formYoutubeUrl.trim() || undefined,
       readingTimeMinutes: Number(formReadTime) || 5,
       likesCount: 14
@@ -666,46 +669,113 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       />
                     </div>
 
-                    {/* Media Link Attachments (Image, Audio, YouTube) */}
+                    {/* Media Link Attachments (Image, Audio M4A/MP3, Video MP4/YouTube) */}
                     <div className="p-3 bg-[#120E0B] rounded-xl border border-[#594234]/60 space-y-3">
-                      <span className="font-bold text-[#E5A836] block text-[11px]">
-                        🔗 پیوست‌های چندرسانه‌ای (تصویر PNG/JPG، فایل صوت با پلیر، ویدیوی یوتیوب):
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#E5A836] block text-[11px]">
+                          🔗 پیوست‌های چندرسانه‌ای مستقیم (تصاویر، فایل صوتی M4A/MP3، ویدیوی مستقیم MP4 یا یوتیوب):
+                        </span>
+                        <span className="text-[10px] text-[#A6937C]">
+                          بدون نیاز به آپلود، با لینک مستقیم هر سرور یا ابری
+                        </span>
+                      </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[10px] text-[#A6937C] mb-1">آدرس تصویر کاور (PNG یا JPG)</label>
+                          <label className="block text-[10px] text-[#A6937C] mb-1">
+                            آدرس تصویر شاخص (JPG, PNG, WebP)
+                          </label>
                           <input
                             type="url"
                             value={formCoverImage}
                             onChange={(e) => setFormCoverImage(e.target.value)}
-                            placeholder="https://example.com/cover.jpg"
-                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1 text-xs text-[#F5EEDB] outline-none"
+                            placeholder="https://example.com/image.jpg"
+                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1.5 text-xs text-[#F5EEDB] outline-none font-mono"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] text-[#A6937C] mb-1">آدرس فایل صوتی پیوست (MP3 / WAV)</label>
+                          <label className="block text-[10px] text-[#A6937C] mb-1">
+                            فایل صوتی مستقیم (M4A / MP3 / OGG / WAV)
+                          </label>
                           <input
                             type="url"
                             value={formAudioUrl}
                             onChange={(e) => setFormAudioUrl(e.target.value)}
-                            placeholder="https://example.com/sample.mp3"
-                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1 text-xs text-[#F5EEDB] outline-none"
+                            placeholder="https://example.com/audio.m4a"
+                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1.5 text-xs text-[#F5EEDB] outline-none font-mono"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] text-[#A6937C] mb-1">آدرس ویدیوی یوتیوب (YouTube URL)</label>
+                          <label className="block text-[10px] text-[#A6937C] mb-1">
+                            ویدیو (لینک مستقیم MP4 / WebM یا یوتیوب)
+                          </label>
                           <input
                             type="url"
                             value={formYoutubeUrl}
                             onChange={(e) => setFormYoutubeUrl(e.target.value)}
-                            placeholder="https://youtube.com/watch?v=..."
-                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1 text-xs text-[#F5EEDB] outline-none"
+                            placeholder="https://example.com/video.mp4 یا یوتیوب"
+                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1.5 text-xs text-[#F5EEDB] outline-none font-mono"
                           />
                         </div>
                       </div>
+
+                      {/* Optional Audio Title */}
+                      {formAudioUrl && (
+                        <div>
+                          <label className="block text-[10px] text-[#A6937C] mb-1">
+                            عنوان فایل صوتی پیوست (اختیاری)
+                          </label>
+                          <input
+                            type="text"
+                            value={formAudioTitle}
+                            onChange={(e) => setFormAudioTitle(e.target.value)}
+                            placeholder="مثال: اجرای گوشه شوشتری در کوک ر-لا-ر-لا"
+                            className="w-full bg-[#241A14] border border-[#594234] rounded-lg px-2.5 py-1 text-xs text-[#F5EEDB] outline-none"
+                          />
+                        </div>
+                      )}
+
+                      {/* Live Media Previews for Admin */}
+                      {(formAudioUrl || formYoutubeUrl || formCoverImage) && (
+                        <div className="pt-2 border-t border-[#594234]/40 space-y-2">
+                          <span className="text-[10px] font-bold text-[#34D399] block">
+                            👁️ پیش‌نمایش زنده رسانه‌ها در پلیر قبل از انتشار:
+                          </span>
+
+                          {formAudioUrl && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] text-[#A6937C]">پلیر صوتی زنده:</span>
+                              <AudioLinkPlayer
+                                audioUrl={formAudioUrl}
+                                title={formAudioTitle || formTitle || 'پیش‌نمایش فایل صوتی'}
+                              />
+                            </div>
+                          )}
+
+                          {formYoutubeUrl && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] text-[#A6937C]">پلیر ویدیویی زنده:</span>
+                              <MediaVideoPlayer
+                                videoUrl={formYoutubeUrl}
+                                title={formTitle || 'پیش‌نمایش ویدیو'}
+                                posterUrl={formCoverImage}
+                              />
+                            </div>
+                          )}
+
+                          {formCoverImage && !formYoutubeUrl && (
+                            <div className="w-full max-h-40 rounded-lg overflow-hidden border border-[#594234]/50">
+                              <img
+                                src={formCoverImage}
+                                alt="پیش‌نمایش کاور"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-end gap-2 pt-2">

@@ -21,7 +21,8 @@ export interface BlogPost {
   coverImageUrl?: string;
   audioUrl?: string;
   audioTitle?: string;
-  youtubeUrl?: string;
+  videoUrl?: string; // Direct video (MP4, WebM, etc.) or YouTube
+  youtubeUrl?: string; // Backward compatibility
   readingTimeMinutes: number;
   likesCount: number;
   isFeatured?: boolean;

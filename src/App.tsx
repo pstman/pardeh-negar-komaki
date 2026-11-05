@@ -70,6 +70,44 @@ export default function App() {
     applyTheme(getStoredTheme());
   }, []);
 
+  // Deep linking: detect tab and blog post from URL hash / query on mount and hash changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (hash.includes('blog') || hash.includes('post') || search.includes('post=')) {
+        setActiveTab('blog');
+      } else if (hash.includes('continuum') || hash.includes('map')) {
+        setActiveTab('continuum_map');
+      } else if (hash.includes('rhythm')) {
+        setActiveTab('rhythm_engine');
+      } else if (hash.includes('daramad')) {
+        setActiveTab('daramad_motifs');
+      } else if (hash.includes('circle')) {
+        setActiveTab('circle_fifths');
+      }
+    };
+
+    handleLocationChange();
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+  const handleTabSelect = (tab: MainTabType) => {
+    setActiveTab(tab);
+    if (tab === 'blog') {
+      if (!window.location.hash.includes('blog')) {
+        window.history.replaceState(null, '', '#blog');
+      }
+    } else {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  };
+
   const t = TRANSLATIONS[currentLanguage] || TRANSLATIONS.fa;
   const isRtl = currentLanguage === 'fa' || currentLanguage === 'ar';
 
@@ -201,7 +239,7 @@ export default function App() {
       {/* Main Top Header Component */}
       <Header
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleTabSelect}
         onExportPng={handleExportPng}
         onToggleFullscreen={handleToggleFullscreen}
         onOpenTreatise={() => setIsTreatiseModalOpen(true)}
